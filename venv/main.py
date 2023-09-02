@@ -13,7 +13,6 @@ def calcula_peso(mochila_test):
         soma += mochila_test[index] * peso
     return soma
 
-
 def calcula_valor(mochila_test):
     soma = 0
     for index in range(len(objetos)):
@@ -26,22 +25,16 @@ def calcula_valor(mochila_test):
     else:
         return soma
 
-
 def escalonamento(time):
     # return fator_k ** (-fator_l * time)
     return math.exp(-10 * time / (3 * tempo_limite))
 
-
-def gera_proximo(viajantes_test, op):
+def gera_proximo(viajantes_test):
     viajantes_retorno = copy.deepcopy(viajantes_test)
     for ind_viajante in range(qnt_mochileiros):
-        if op == True:
-            mochila_escolhida = random.choice(viajantes_retorno[ind_viajante])
-            viajantes_retorno[ind_viajante][mochila_escolhida] = 1 - viajantes_retorno[ind_viajante][mochila_escolhida]
-        else:
-            for peca in range(n):
-                if random.random() < 0.1:
-                    viajantes_retorno[ind_viajante][peca] = 1 - viajantes_retorno[ind_viajante][peca]
+        for peca in range(n):
+            if random.random() < prob_escolha:
+                viajantes_retorno[ind_viajante][peca] = 1 - viajantes_retorno[ind_viajante][peca]
     return viajantes_retorno
 
 def tempora_simulada(viajantes_iniciais):
@@ -50,7 +43,7 @@ def tempora_simulada(viajantes_iniciais):
 
     for tempo in range(tempo_limite):
         atualiza_results(atual, viaj_results, tempo)
-        proximo = gera_proximo(atual, gera_prox_op)
+        proximo = gera_proximo(atual)
         atualiza_melhores(melhores_viajantes, proximo)
 
         for mochileiro_cand in range(qnt_mochileiros):
@@ -63,14 +56,12 @@ def tempora_simulada(viajantes_iniciais):
     plota_grafico(viaj_results)
     return melhores_viajantes
 
-
 def atualiza_melhores(viajantes_cand, proximo):
     viajantes_retorno = copy.deepcopy(viajantes_cand)
 
     for mochila_cand in range(qnt_mochileiros):
         if calcula_valor(viajantes_retorno[mochila_cand]) < calcula_valor(proximo[mochila_cand]):
             viajantes_cand[mochila_cand] = proximo[mochila_cand]
-
 
 def atualiza_results(viajantes_, viaj_results, tempo_t):
     for index in range(qnt_mochileiros):
@@ -81,11 +72,11 @@ def printa_mochileiros(viajantes_test):
         print(mochileiro, " Valor: ", calcula_valor(mochileiro),
               " Peso: ", calcula_peso(mochileiro))
 
-
 def plota_grafico(viajantes_r):
     x1 = np.arange(1, tempo_limite + 1, 1)
     for index in range(qnt_mochileiros):
         plt.plot(x1, viajantes_r[index])
+
 
 # n = int(input("Digite um número de pecas: "))
 # valorMin = input("Digite um valor máximo para as pecas: ")
@@ -93,18 +84,27 @@ def plota_grafico(viajantes_r):
 # pesoMin = input("Digite um peso máximo para as pecas: ")
 # pesoMax = input("Digite um peso máximo para as pecas: ")
 # capMochila = input("Digite a capacidade máxima da mochila: ")
+
+# n = 6
+# capMochila = 10
+
 n = 10
-valorMax = 100
-valorMin = 20
-pesoMax = 5
+valorMax = 5
+valorMin = 2
+pesoMax = 2
 pesoMin = 1
 capMochila = 20
+prob_escolha = 0.05
 qnt_mochileiros = 5
 tempo_limite = 200
-gera_prox_op = False  # true: troca apenas 1 peca, false: pode trocar mais de 1
 
 viajantes = []
 objetos = []
+
+if n > 20:
+    prob_escolha = 0.05
+else:
+    prob_escolha = 1 / n
 
 for indexI in range(qnt_mochileiros):
     mochila = []
@@ -116,6 +116,13 @@ for indexI in range(n):
     tupla = (random.randint(valorMin, valorMax),
              random.randint(pesoMin, pesoMax))
     objetos.append(tupla)
+# objetos.append((20,1))            #exemplo fixo para testes
+# objetos.append((5,2))
+# objetos.append((10,3))
+# objetos.append((40,8))
+# objetos.append((15,7))
+# objetos.append((25,4))
+
 
 viaj_results = []
 for moch in range(qnt_mochileiros):
@@ -129,13 +136,13 @@ printa_mochileiros(viajantes)
 print(objetos)
 # print("----------------- COMPARAÇÃO GERA PRÓXIMO ------------------")
 # print(viajantes)
-# print(gera_proximo(viajantes, gera_prox_op))
+# print(gera_proximo(viajantes))
 # print("----------------- TESTE ESCALONAMENTO ------------------")
 # for indexI in range(tempo_limite):
 #     print(escalonamento(indexI))
 # print("----------------- TESTE ATUALIZA MELHORES ------------------")
 # for indexI in range(2):
-#     proximo = gera_proximo(viajantes, gera_prox_op)
+#     proximo = gera_proximo(viajantes)
 #     print("Proximo gerado:")
 #     printa_mochileiros(proximo)
 #     print("Antes da função, melhores:")
