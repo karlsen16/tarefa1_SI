@@ -2,6 +2,9 @@ import copy
 import math
 import random
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 def calcula_peso(mochila_test):
     soma = 0
@@ -25,32 +28,29 @@ def calcula_valor(mochila_test):
 
 
 def escalonamento(time):
-    return fator_k ** (-fator_l * time)
+    # return fator_k ** (-fator_l * time)
+    return math.exp(-10 * time / (3 * tempo_limite))
 
 
-# def gera_proximo(viajantes_test):
-#     viajantes_retorno = copy.deepcopy(viajantes_test)
-#     for ind_viajante in range(qnt_mochileiros):
-#         mochila_escolhida = random.choice(viajantes_retorno[ind_viajante])
-#         viajantes_retorno[ind_viajante][mochila_escolhida] = 1 - viajantes_retorno[ind_viajante][mochila_escolhida]
-#     return viajantes_retorno
-
-def gera_proximo(viajantes_test):
+def gera_proximo(viajantes_test, op):
     viajantes_retorno = copy.deepcopy(viajantes_test)
-    for viajante in range(qnt_mochileiros):
-        for peca in range(n):
-            if random.random() < 0.1:
-                viajantes_retorno[viajante][peca] = 1 - viajantes_retorno[viajante][peca]
+    for ind_viajante in range(qnt_mochileiros):
+        if op == True:
+            mochila_escolhida = random.choice(viajantes_retorno[ind_viajante])
+            viajantes_retorno[ind_viajante][mochila_escolhida] = 1 - viajantes_retorno[ind_viajante][mochila_escolhida]
+        else:
+            for peca in range(n):
+                if random.random() < 0.1:
+                    viajantes_retorno[ind_viajante][peca] = 1 - viajantes_retorno[ind_viajante][peca]
     return viajantes_retorno
-
 
 def tempora_simulada(viajantes_iniciais):
     atual = copy.deepcopy(viajantes_iniciais)
     melhores_viajantes = copy.deepcopy(viajantes_iniciais)
 
     for tempo in range(tempo_limite):
-        temperatura = escalonamento(t)
-        proximo = gera_proximo(atual)
+        atualiza_results(atual, viaj_results, tempo)
+        proximo = gera_proximo(atual, gera_prox_op)
         atualiza_melhores(melhores_viajantes, proximo)
 
         for mochileiro_cand in range(qnt_mochileiros):
@@ -58,8 +58,9 @@ def tempora_simulada(viajantes_iniciais):
             if delta_e >= 0:
                 atual[mochileiro_cand] = proximo[mochileiro_cand]
             else:
-                if random.random() < math.exp(delta_e / temperatura):
+                if random.uniform(0, 1) < escalonamento(tempo):
                     atual[mochileiro_cand] = proximo[mochileiro_cand]
+    plota_grafico(viaj_results)
     return melhores_viajantes
 
 
@@ -71,11 +72,20 @@ def atualiza_melhores(viajantes_cand, proximo):
             viajantes_cand[mochila_cand] = proximo[mochila_cand]
 
 
+def atualiza_results(viajantes_, viaj_results, tempo_t):
+    for index in range(qnt_mochileiros):
+        viaj_results[index][tempo_t] = calcula_valor(viajantes_[index])
+
 def printa_mochileiros(viajantes_test):
     for mochileiro in viajantes_test:
         print(mochileiro, " Valor: ", calcula_valor(mochileiro),
               " Peso: ", calcula_peso(mochileiro))
 
+
+def plota_grafico(viajantes_r):
+    x1 = np.arange(1, tempo_limite + 1, 1)
+    for index in range(qnt_mochileiros):
+        plt.plot(x1, viajantes_r[index])
 
 # n = int(input("Digite um número de pecas: "))
 # valorMin = input("Digite um valor máximo para as pecas: ")
@@ -86,18 +96,14 @@ def printa_mochileiros(viajantes_test):
 n = 10
 valorMax = 100
 valorMin = 20
-pesoMax = 10
+pesoMax = 5
 pesoMin = 1
 capMochila = 20
 qnt_mochileiros = 5
-fator_k = 20  # parametro para escalonamento
-fator_l = 0.005  # parametro para escalonamento
-temperatura_inicial = 20
-t = 1
-tempo_limite = 1000
+tempo_limite = 200
+gera_prox_op = False  # true: troca apenas 1 peca, false: pode trocar mais de 1
 
 viajantes = []
-mochila = []
 objetos = []
 
 for indexI in range(qnt_mochileiros):
@@ -111,18 +117,25 @@ for indexI in range(n):
              random.randint(pesoMin, pesoMax))
     objetos.append(tupla)
 
+viaj_results = []
+for moch in range(qnt_mochileiros):
+    results = []
+    for index in range(tempo_limite):
+        results.append(0)
+    viaj_results.append(results)
+
 print("--------------- VALORES INICIAIS DE VIAJANTES E OBJETOS ----------------")
 printa_mochileiros(viajantes)
 print(objetos)
 # print("----------------- COMPARAÇÃO GERA PRÓXIMO ------------------")
 # print(viajantes)
-# print(gera_proximo(viajantes))
+# print(gera_proximo(viajantes, gera_prox_op))
 # print("----------------- TESTE ESCALONAMENTO ------------------")
 # for indexI in range(tempo_limite):
 #     print(escalonamento(indexI))
 # print("----------------- TESTE ATUALIZA MELHORES ------------------")
 # for indexI in range(2):
-#     proximo = gera_proximo(viajantes)
+#     proximo = gera_proximo(viajantes, gera_prox_op)
 #     print("Proximo gerado:")
 #     printa_mochileiros(proximo)
 #     print("Antes da função, melhores:")
@@ -134,3 +147,4 @@ print(objetos)
 print("---------- MELHORES VIAJANTES TEMPORA SIMULADA -------------")
 viajantes = tempora_simulada(viajantes)
 printa_mochileiros(viajantes)
+plt.show()
